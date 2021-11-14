@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Votes" ALTER COLUMN "voteType" SET DEFAULT E'VERYCOOL';

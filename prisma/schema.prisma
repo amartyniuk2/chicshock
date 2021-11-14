@@ -1,0 +1,253 @@
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
+model User {
+  id  String   @id @default(cuid())
+  role Role @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt  DateTime?
+  isBanned Boolean @default(false)
+  email     String?   @unique
+  password  String?
+  username String? @unique
+  signupType String?
+  invitedBy String?
+  invitationStatus String?
+  status String?
+  emailVerified Boolean? @default(false)
+  badgeLevel String?
+  userType String? @default("normal")
+  categories Categories[]
+  posts Posts[]
+  views Views[]
+  voted Votes[]
+  commentes Comments[]
+  reports Reports[]
+  notifications Notifications[] @relation("Receiver")
+  notificationsFromSender  Notifications[] @relation("Sender")
+  friends Friends[] @relation("Friend")
+  friended Friends[] @relation("Friended")
+  followers Followers[] @relation("Followers")
+  following Followers[] @relation("Following")
+  subscribers UserToUserPushNotifications[] @relation("NotificationSubscriber")
+  notificationPublishers UserToUserPushNotifications[] @relation("NotificationPublisher")
+  notificationSettings NotificationSettings? @relation("NotificationSettings")
+  expoPushToken String?
+  firstName String?
+  lastName String?
+  phoneNumber Int?
+  city String?
+  bio String?
+  age Int?
+  gender String?
+  countryOfOrigin String?
+  countryCode Int?
+  ageRange String?
+  dateOfBirth DateTime?
+  profilePicture String?
+  recoveryEmail String?
+  platformId String?
+  platformToken String?
+}
+
+model Friends {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId String
+  user User @relation("Friended", fields: [userId], references: [id])
+  friend User @relation("Friend", fields: [friendId], references: [id])
+  friendId String
+  friendshipStatus FriendshipStatus @default(WAITING)
+}
+
+model Followers {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  follower User @relation("Following", fields: [followerId], references: [id])
+  followerId String
+  user User @relation("Followers", fields: [userId], references: [id])
+  userId String 
+}
+
+
+model Posts {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt  DateTime?
+  expiryDate DateTime?
+  title String
+  description String?
+  photos String[]
+  subCategories String[]
+  brand String?
+  location String?
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  comments Comments[]
+  views Views[]
+  votes Votes[]
+  reports Reports[]
+  isPrivate Boolean? @default(false)
+  category Categories? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+  isArchived Boolean? @default(false)
+  isDeleted Boolean? @default(false)
+  postType PostType?
+  notifications Notifications[]
+}
+
+model Votes {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  voteType VoteType @default(VERYCOOL)
+  user User @relation(fields: [userId], references: [id])
+  post Posts @relation(fields: [postId], references: [id])
+  postId String
+  userId String
+}
+
+model Reports {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt  DateTime?
+  reason String
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  post Posts @relation(fields: [postId], references: [id])
+  postId String
+}
+
+model Comments {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt  DateTime?
+  comment String
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  post Posts @relation(fields: [postId], references: [id])
+  postId String
+  isPrivate Boolean
+}
+
+model Views {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  post Posts @relation(fields: [postId], references: [id])
+  postId String
+  categoryId String
+  category Categories @relation(fields: [categoryId], references: [id])
+} 
+
+model Notifications {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  description String 
+  userId String?
+  user User? @relation("Receiver", fields: [userId], references: [id])
+  notificationType NotificationType
+  senderId String?
+  sender User? @relation("Sender", fields: [senderId], references: [id])
+  postId String?
+  post Posts? @relation(fields: [postId], references: [id])
+}
+
+model NotificationSettings {
+  id String @id @default(cuid())
+  userId String @unique
+  user User @relation("NotificationSettings", fields: [userId], references: [id])
+  pauseNotifications Boolean? @default(false)
+  friendRequestsNotificationsOn Boolean? @default(true)
+  followNotificationsOn Boolean? @default(true)
+  votingExpiredNotificationsOn Boolean? @default(true)
+}
+
+model UserToUserPushNotifications {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  subscriberUserId String
+  publisherUserId String
+  subscriber User @relation("NotificationSubscriber", fields: [subscriberUserId], references: [id])
+  publisher User @relation("NotificationPublisher", fields: [publisherUserId], references: [id])
+  postNotificationsOn Boolean? @default(true)
+}
+
+model Categories {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  name String @unique
+  isActive Boolean @default(true)
+  posts Posts[]
+  views Views[]
+  userId String
+  user User @relation(fields: [userId], references: [id])
+}
+
+model AppConfigs {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// System should remove ChicShock post that received X reports (flagging) by different users
+  allowedReportsCountPerPost Int @default(3)
+
+  // If a user gets more than X flags (3 different ads/posts), then use push notification + email to warn the the user to stop his malicious activity before he’ll get banned
+  countOfBlockedPostsBeforeBan Int @default(3)
+}
+
+enum VoteType {
+  VERYCOOL
+  COOL
+  FIRE
+  CHIC
+  LEFT
+  RIGHT
+  SHOCK
+}
+
+enum NotificationType {
+  FRIENDREQUEST
+  USERPOST
+  VOTINGEXPIRED
+  FOLLOWED
+}
+
+enum FriendshipStatus {
+  ACCEPTED
+  DECLINED
+  WAITING
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum PostType {
+  MAKEOVER
+  STANDARD
+  COMPARE
+}

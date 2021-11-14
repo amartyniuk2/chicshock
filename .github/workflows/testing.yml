@@ -1,0 +1,99 @@
+name: "Testing Build"
+env:
+  AWS_REGION: 'us-east-2'
+  ECR_REPOSITORY: 'ohio-main-repo'
+  ECR_REGISTRY: '073541075827.dkr.ecr.us-east-2.amazonaws.com'
+  EC2_HOSTNAME: '18.190.17.223'
+  EC2_USERNAME: 'ubuntu'
+  GOOGLE_CLIENT_SECRET: "somestring"
+  GOOGLE_CLIENT_ID: "somestring"
+  JWT_ACCESS_SECRET: "nestjsPrismaAccessSecret"
+  JWT_REFRESH_SECRET: "nestjsPrismaRefreshSecret"
+  INSTAGRAM_APP_ID: "app"
+  INSTAGRAM_APP_SECRET: "kaka"
+  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/shock"
+  BUCKET_NAME: chic-main
+  FILE_IMAGE_SIZE: 300000
+  FACEBOOK_CLIENT_ID: "S"
+  FACEBOOK_CLIENT_SECRET: "S"
+  FACEBOOK_REDIRECT_URL: "S"
+
+on:
+  push:
+    branches: 
+      - '**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: shock
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - run: npm install
+      - run: npm test
+      - run: DATABASE_URL=${{secrets.TEST_DATABASE_URL}} npm run migrate:deploy
+
+  build:
+    name: Build ECR Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/test'
+    environment: production
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+        ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+        IMAGE_TAG: shock-backend-api
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+        
+  deploy:
+    name: Deploy
+    needs: build
+    if: github.ref == 'refs/heads/test'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          key: ${{ secrets.TEST_AWS_PRIVATE_KEY  }}
+          host: ${{ env.EC2_HOSTNAME  }}
+          username: ${{ env.EC2_USERNAME  }}
+          script: ./backend-startup.sh
+  

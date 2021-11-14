@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "User" ALTER COLUMN "signupType" DROP NOT NULL,
+ALTER COLUMN "emailVerified" DROP NOT NULL,
+ALTER COLUMN "status" DROP NOT NULL;

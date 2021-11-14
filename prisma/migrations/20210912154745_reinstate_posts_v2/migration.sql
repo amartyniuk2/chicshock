@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Posts" ALTER COLUMN "description" DROP NOT NULL,
+ALTER COLUMN "isPrivate" DROP NOT NULL,
+ALTER COLUMN "isArchived" DROP NOT NULL;

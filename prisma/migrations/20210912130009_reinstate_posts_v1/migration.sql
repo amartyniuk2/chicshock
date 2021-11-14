@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Posts" ALTER COLUMN "deletedAt" DROP NOT NULL,
+ALTER COLUMN "isPrivate" SET DEFAULT false,
+ALTER COLUMN "categoryId" DROP NOT NULL;

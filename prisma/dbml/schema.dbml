@@ -1,0 +1,283 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table User {
+  id String [pk]
+  role Role [not null, default: 'USER']
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  isBanned Boolean [not null, default: false]
+  email String [unique]
+  password String
+  username String [unique]
+  signupType String
+  invitedBy String
+  invitationStatus String
+  status String
+  emailVerified Boolean [default: false]
+  badgeLevel String
+  userType String [default: 'normal']
+  categories Categories [not null]
+  posts Posts [not null]
+  views Views [not null]
+  voted Votes [not null]
+  commentes Comments [not null]
+  reports Reports [not null]
+  notifications Notifications [not null]
+  notificationsFromSender Notifications [not null]
+  friends Friends [not null]
+  friended Friends [not null]
+  followers Followers [not null]
+  following Followers [not null]
+  subscribers UserToUserPushNotifications [not null]
+  notificationPublishers UserToUserPushNotifications [not null]
+  notificationSettings NotificationSettings
+  expoPushToken String
+  firstName String
+  lastName String
+  phoneNumber Int
+  city String
+  bio String
+  age Int
+  gender String
+  countryOfOrigin String
+  countryCode Int
+  ageRange String
+  dateOfBirth DateTime
+  profilePicture String
+  recoveryEmail String
+  platformId String
+  platformToken String
+}
+
+Table Friends {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  userId String [not null]
+  user User [not null]
+  friend User [not null]
+  friendId String [not null]
+  friendshipStatus FriendshipStatus [not null, default: 'WAITING']
+}
+
+Table Followers {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  follower User [not null]
+  followerId String [not null]
+  user User [not null]
+  userId String [not null]
+}
+
+Table Posts {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  expiryDate DateTime
+  title String [not null]
+  description String
+  photos String [not null]
+  subCategories String [not null]
+  brand String
+  location String
+  userId String [not null]
+  user User [not null]
+  comments Comments [not null]
+  views Views [not null]
+  votes Votes [not null]
+  reports Reports [not null]
+  isPrivate Boolean [default: false]
+  category Categories
+  categoryId String
+  isArchived Boolean [default: false]
+  isDeleted Boolean [default: false]
+  postType PostType
+  notifications Notifications [not null]
+}
+
+Table Votes {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  voteType VoteType [not null, default: 'VERYCOOL']
+  user User [not null]
+  post Posts [not null]
+  postId String [not null]
+  userId String [not null]
+}
+
+Table Reports {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  reason String [not null]
+  userId String [not null]
+  user User [not null]
+  post Posts [not null]
+  postId String [not null]
+}
+
+Table Comments {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  comment String [not null]
+  userId String [not null]
+  user User [not null]
+  post Posts [not null]
+  postId String [not null]
+  isPrivate Boolean [not null]
+}
+
+Table Views {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  userId String [not null]
+  user User [not null]
+  post Posts [not null]
+  postId String [not null]
+  categoryId String [not null]
+  category Categories [not null]
+}
+
+Table Notifications {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  description String [not null]
+  userId String
+  user User
+  notificationType NotificationType [not null]
+  senderId String
+  sender User
+  postId String
+  post Posts
+}
+
+Table NotificationSettings {
+  id String [pk]
+  userId String [unique, not null]
+  user User [not null]
+  pauseNotifications Boolean [default: false]
+  friendRequestsNotificationsOn Boolean [default: true]
+  followNotificationsOn Boolean [default: true]
+  votingExpiredNotificationsOn Boolean [default: true]
+}
+
+Table UserToUserPushNotifications {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  subscriberUserId String [not null]
+  publisherUserId String [not null]
+  subscriber User [not null]
+  publisher User [not null]
+  postNotificationsOn Boolean [default: true]
+}
+
+Table Categories {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  name String [unique, not null]
+  isActive Boolean [not null, default: true]
+  posts Posts [not null]
+  views Views [not null]
+  userId String [not null]
+  user User [not null]
+}
+
+Table AppConfigs {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  allowedReportsCountPerPost Int [not null, default: 3, note: 'System should remove ChicShock post that received X reports (flagging) by different users']
+  countOfBlockedPostsBeforeBan Int [not null, default: 3]
+}
+
+Enum VoteType {
+  VERYCOOL
+  COOL
+  FIRE
+  CHIC
+  LEFT
+  RIGHT
+  SHOCK
+}
+
+Enum NotificationType {
+  FRIENDREQUEST
+  USERPOST
+  VOTINGEXPIRED
+  FOLLOWED
+}
+
+Enum FriendshipStatus {
+  ACCEPTED
+  DECLINED
+  WAITING
+}
+
+Enum Role {
+  ADMIN
+  USER
+}
+
+Enum PostType {
+  MAKEOVER
+  STANDARD
+  COMPARE
+}
+
+Ref: Friends.userId > User.id
+
+Ref: Friends.friendId > User.id
+
+Ref: Followers.followerId > User.id
+
+Ref: Followers.userId > User.id
+
+Ref: Posts.userId > User.id
+
+Ref: Posts.categoryId > Categories.id
+
+Ref: Votes.userId > User.id
+
+Ref: Votes.postId > Posts.id
+
+Ref: Reports.userId > User.id
+
+Ref: Reports.postId > Posts.id
+
+Ref: Comments.userId > User.id
+
+Ref: Comments.postId > Posts.id
+
+Ref: Views.userId > User.id
+
+Ref: Views.postId > Posts.id
+
+Ref: Views.categoryId > Categories.id
+
+Ref: Notifications.userId > User.id
+
+Ref: Notifications.senderId > User.id
+
+Ref: Notifications.postId > Posts.id
+
+Ref: NotificationSettings.userId - User.id
+
+Ref: UserToUserPushNotifications.subscriberUserId > User.id
+
+Ref: UserToUserPushNotifications.publisherUserId > User.id
+
+Ref: Categories.userId > User.id
